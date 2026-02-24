@@ -1,0 +1,19 @@
+services:
+  php:
+    build:
+      context: .
+      dockerfile: docker/php/Dockerfile
+    container_name: symfony_api
+    volumes:
+      - .:/var/www/html
+    ports:
+      - "8000:8000"
+    environment:
+      # Docker Compose pasará la variable DATABASE_URL del .env al contenedor
+      DATABASE_URL: ${DATABASE_URL}
+    networks:
+      - symfony_net
+
+networks:
+  symfony_net:
+    driver: bridge
