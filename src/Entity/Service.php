@@ -8,6 +8,7 @@ use Doctrine\Common\Collections\Collection;
 use Doctrine\DBAL\Types\Types;
 use Doctrine\ORM\Mapping as ORM;
 use App\Entity\Client;
+use Symfony\component\Serializer\Attribute\Groups;
 
 #[ORM\Entity(repositoryClass: ServiceRepository::class)]
 #[ORM\InheritanceType("JOINED")]
@@ -18,18 +19,22 @@ abstract class Service
     #[ORM\Id]
     #[ORM\GeneratedValue]
     #[ORM\Column]
+    #[Groups(['client:read'])]
     private ?int $id = null;
 
     #[ORM\ManyToOne(inversedBy: 'services')]
     private ?Client $client = null;
 
     #[ORM\Column(length: 255)]
+    #[Groups(['client:read'])]
     private ?string $type = null;
 
     #[ORM\Column(type: Types::TEXT)]
+    #[Groups(['client:read'])]
     private ?string $installAddress = null;
 
     #[ORM\Column(length: 255)]
+    #[Groups(['client:read'])]
     private ?string $status = null;
 
     /**
