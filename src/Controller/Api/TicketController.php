@@ -2,17 +2,18 @@
 
 namespace App\Controller\Api;
 
+use App\Entity\Ticket;
 use Symfony\Bundle\FrameworkBundle\Controller\AbstractController;
-use Symfony\Component\HttpFoundation\Response;
+use Symfony\Component\HttpFoundation\JsonResponse;
 use Symfony\Component\Routing\Attribute\Route;
+use Doctrine\ORM\EntityManagerInterface;
 
 final class TicketController extends AbstractController
 {
-    #[Route('/api/ticket', name: 'app_api_ticket')]
-    public function index(): Response
+    #[Route('/api/tickets', name: 'api_tickets_index', methods: ["GET"])]
+    public function index(EntityManagerInterface $entityManager): JsonResponse
     {
-        return $this->render('api/ticket/index.html.twig', [
-            'controller_name' => 'TicketController',
-        ]);
+        $tickets = $entityManager->getRepository(Ticket::class)->findOneBy(['id' => 63]);
+        return $this->json($tickets, 200, [], ['groups' => 'ticket:read']);
     }
 }
