@@ -1,7 +1,9 @@
+# Usamos la imagen oficial de FrankenPHP con PHP 8.3 y Alpine (ligera y rápida)
 FROM dunglas/frankenphp:1-php8.3-alpine
 
-# 1. Instalamos dependencias del sistema y extensiones de PHP
-RUN apt-get update && apt-get install -y \
+# Instalamos las dependencias usando 'apk' (el estándar en Alpine)
+RUN apk add --no-cache \
+    bash \
     git \
     unzip \
     libpq-dev \
@@ -9,20 +11,24 @@ RUN apt-get update && apt-get install -y \
     icu-dev \
     && docker-php-ext-install pdo pdo_pgsql zip intl
 
-# 2. Instalamos Composer
+# Instalamos Composer
 COPY --from=composer:latest /usr/bin/composer /usr/bin/composer
 
-WORKDIR /var/www/html
+# Configuramos el directorio de trabajo
+WORKDIR /app
 
-# 3. COPIAMOS EL CÓDIGO (Paso crítico para Dokploy/Producción)
+# Copiamos los archivos del proyecto (esto es vital para el VPS)
 COPY . .
 
-# 4. Instalamos dependencias de Symfony para producción
+# Instalamos dependencias de Symfony para producción
 ENV COMPOSER_ALLOW_SUPERUSER=1
 RUN composer install --no-dev --optimize-autoloader --no-scripts
 
-# 5. Permisos para Symfony (Cache y Logs)
+# Ajustamos permisos para que Symfony pueda escribir en cache y logs
 RUN chown -R www-data:www-data var/
 
-# Exponemos el puerto (PHP-FPM usa el 9000 por defecto)
-EXPOSE 9000
+# FrankenPHP escucha por defecto en el puerto 80, pero Dokploy suele 
+# preferir que definas uno claro. Exponemos el 80.
+EXPOSE 80
+
+# No hace falta CMD, la imagen de FrankenPHP ya sabe qué hacer.
