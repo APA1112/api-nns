@@ -1,4 +1,4 @@
-FROM php:8.3-fpm
+FROM dunglas/frankenphp:1-php8.3-alpine
 
 # 1. Instalamos dependencias del sistema y extensiones de PHP
 RUN apt-get update && apt-get install -y \
