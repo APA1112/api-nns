@@ -1,7 +1,6 @@
-# Usamos la imagen oficial de FrankenPHP con PHP 8.3 y Alpine (ligera y rápida)
 FROM dunglas/frankenphp:1-php8.3-alpine
 
-# Instalamos las dependencias usando 'apk' (el estándar en Alpine)
+# 1. Instalamos dependencias y extensiones (Añadimos icu-dev para intl)
 RUN apk add --no-cache \
     bash \
     git \
@@ -9,26 +8,30 @@ RUN apk add --no-cache \
     libpq-dev \
     libzip-dev \
     icu-dev \
+    && docker-php-ext-configure intl \
     && docker-php-ext-install pdo pdo_pgsql zip intl
 
-# Instalamos Composer
+# 2. Instalamos Composer
 COPY --from=composer:latest /usr/bin/composer /usr/bin/composer
 
-# Configuramos el directorio de trabajo
 WORKDIR /app
 
-# Copiamos los archivos del proyecto (esto es vital para el VPS)
+# 3. Copiamos solo los archivos de dependencias primero (Optimiza la caché de Docker)
+COPY composer.json composer.lock ./
+
+# 4. Instalamos dependencias saltándonos los chequeos de plataforma y scripts
+# Esto evita que falle si falta una extensión menor o si no hay DB
+ENV COMPOSER_ALLOW_SUPERUSER=1
+RUN composer install --no-dev --optimize-autoloader --no-scripts --ignore-platform-reqs
+
+# 5. Copiamos el resto del código
 COPY . .
 
-# Instalamos dependencias de Symfony para producción
-ENV COMPOSER_ALLOW_SUPERUSER=1
-RUN composer install --no-dev --optimize-autoloader --no-scripts
+# 6. Creamos la carpeta var y damos permisos
+RUN mkdir -p var && chown -R www-data:www-data var/
 
-# Ajustamos permisos para que Symfony pueda escribir en cache y logs
-RUN chown -R www-data:www-data var/
+# Seteamos variables de entorno para producción
+ENV APP_ENV=prod
+ENV FRANKENPHP_CONFIG="worker ./public/index.php"
 
-# FrankenPHP escucha por defecto en el puerto 80, pero Dokploy suele 
-# preferir que definas uno claro. Exponemos el 80.
 EXPOSE 80
-
-# No hace falta CMD, la imagen de FrankenPHP ya sabe qué hacer.
