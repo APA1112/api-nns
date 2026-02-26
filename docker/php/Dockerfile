@@ -1,18 +1,28 @@
 FROM php:8.3-fpm
 
-# Instalamos dependencias del sistema y extensiones de PHP
+# 1. Instalamos dependencias del sistema y extensiones de PHP
 RUN apt-get update && apt-get install -y \
     git \
     unzip \
     libpq-dev \
     libzip-dev \
-    && docker-php-ext-install pdo pdo_pgsql zip
+    icu-dev \
+    && docker-php-ext-install pdo pdo_pgsql zip intl
 
-# Instalamos Composer
+# 2. Instalamos Composer
 COPY --from=composer:latest /usr/bin/composer /usr/bin/composer
 
-# Instalamos el Symfony CLI para ayudarnos con el servidor local
-RUN curl -sS https://get.symfony.com/cli/installer | bash \
-    && mv /root/.symfony5/bin/symfony /usr/local/bin/symfony
-
 WORKDIR /var/www/html
+
+# 3. COPIAMOS EL CÓDIGO (Paso crítico para Dokploy/Producción)
+COPY . .
+
+# 4. Instalamos dependencias de Symfony para producción
+ENV COMPOSER_ALLOW_SUPERUSER=1
+RUN composer install --no-dev --optimize-autoloader --no-scripts
+
+# 5. Permisos para Symfony (Cache y Logs)
+RUN chown -R www-data:www-data var/
+
+# Exponemos el puerto (PHP-FPM usa el 9000 por defecto)
+EXPOSE 9000
