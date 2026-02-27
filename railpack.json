@@ -1,0 +1,9 @@
+{
+  "$schema": "https://schema.railpack.com",
+  "build": {
+    "installCommand": "composer install --no-dev --optimize-autoloader"
+  },
+  "deploy": {
+    "startCommand": "./start-container.sh"
+  }
+}
