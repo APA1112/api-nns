@@ -8,20 +8,20 @@ use Symfony\Component\Serializer\Attribute\Groups;
 #[ORM\Entity]
 class ServiceWimax extends Service 
 {
-    #[ORM\Column(length: 45)]
-    #[Groups(['service:read', 'client:read'])]
+    #[ORM\Column(length: 45, nullable: true)]
+    #[Groups(['service:read', 'service:write', 'client:read'])]
     private ?string $antennaIp = null;
 
-    #[ORM\Column(length: 17)]
-    #[Groups(['service:read', 'client:read'])]
+    #[ORM\Column(length: 17, nullable: true)]
+    #[Groups(['service:read', 'service:write', 'client:read'])]
     private ?string $antennaMac = null;
 
-    #[ORM\Column(length: 255)]
-    #[Groups(['service:read', 'client:read'])]
+    #[ORM\Column(length: 255, nullable: true)]
+    #[Groups(['service:read', 'service:write', 'client:read'])]
     private ?string $apName = null;
 
-    #[ORM\Column]
-    #[Groups(['service:read', 'client:read'])]
+    #[ORM\Column(nullable: true)]
+    #[Groups(['service:read', 'service:write', 'client:read'])]
     private ?int $signalStrength = null;
 
     // Getters y Setters...

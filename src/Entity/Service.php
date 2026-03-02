@@ -19,23 +19,23 @@ abstract class Service
     #[ORM\Id]
     #[ORM\GeneratedValue]
     #[ORM\Column]
-    #[Groups(['client:read', 'service:read'])]
+    #[Groups(['client:read', 'service:read', 'service:write'])]
     private ?int $id = null;
 
     #[ORM\ManyToOne(inversedBy: 'services')]
-    #[Groups(['service:read'])]
+    #[Groups(['service:read', 'service:write'])]
     private ?Client $client = null;
 
     #[ORM\Column(length: 255)]
-    #[Groups(['client:read', 'service:read'])]
+    #[Groups(['client:read', 'service:read', 'service:write'])]
     private ?string $type = null;
 
     #[ORM\Column(type: Types::TEXT)]
-    #[Groups(['client:read', 'service:read'])]
+    #[Groups(['client:read', 'service:read', 'service:write'])]
     private ?string $installAddress = null;
 
     #[ORM\Column(length: 255)]
-    #[Groups(['client:read', 'service:read'])]
+    #[Groups(['client:read', 'service:read', 'service:write'])]
     private ?string $status = null;
 
     /**
