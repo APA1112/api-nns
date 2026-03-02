@@ -3,20 +3,25 @@
 namespace App\Entity;
 
 use Doctrine\ORM\Mapping as ORM;
+use Symfony\Component\Serializer\Attribute\Groups;
 
 #[ORM\Entity]
 class ServiceWimax extends Service 
 {
     #[ORM\Column(length: 45)]
+    #[Groups(['service:read', 'client:read'])]
     private ?string $antennaIp = null;
 
     #[ORM\Column(length: 17)]
+    #[Groups(['service:read', 'client:read'])]
     private ?string $antennaMac = null;
 
     #[ORM\Column(length: 255)]
+    #[Groups(['service:read', 'client:read'])]
     private ?string $apName = null;
 
     #[ORM\Column]
+    #[Groups(['service:read', 'client:read'])]
     private ?int $signalStrength = null;
 
     // Getters y Setters...

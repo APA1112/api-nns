@@ -25,8 +25,8 @@ final class ClientController extends AbstractController
     }
 
     // Endpoint GET para obtener un cliente por su ID
-    #[Route('/api/clients/{id}', name: 'api_clients_show', methods: ["GET"])]
-    public function show(Client $client): JsonResponse
+    #[Route('/api/clients/{id}', name: 'api_clients_detail', methods: ["GET"])]
+    public function detail(Client $client): JsonResponse
     {
         return $this->json($client, 200, [], ['groups' => 'client:read', 'ignored_attributes' => ['id']]);
     }

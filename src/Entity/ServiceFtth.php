@@ -4,20 +4,25 @@
 namespace App\Entity;
 
 use Doctrine\ORM\Mapping as ORM;
+use Symfony\Component\Serializer\Attribute\Groups;
 
 #[ORM\Entity]
 class ServiceFtth extends Service 
 {
     #[ORM\Column(length: 17)]
+    #[Groups(['service:read', 'client:read'])]
     private ?string $ontMac = null;
 
     #[ORM\Column(length: 50)]
+    #[Groups(['service:read', 'client:read'])]
     private ?string $ponPort = null;
 
     #[ORM\Column(length: 50)]
+    #[Groups(['service:read', 'client:read'])]
     private ?string $splitterId = null;
 
     #[ORM\Column(type: 'decimal', precision: 5, scale: 2)]
+    #[Groups(['service:read', 'client:read'])]
     private ?string $opticalPower = null;
 
     // Getters y Setters...

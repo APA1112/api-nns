@@ -16,7 +16,7 @@ class Client
     #[ORM\Id]
     #[ORM\GeneratedValue]
     #[ORM\Column]
-    #[Groups(['client:read'])]
+    #[Groups(['client:read', 'service:read'])]
     private ?int $id = null;
 
     #[ORM\Column(length: 255)]
@@ -27,7 +27,7 @@ class Client
     private ?string $dni = null;
 
     #[ORM\Column(length: 255)]
-    #[Groups(['client:read'])]
+    #[Groups(['client:read', 'service:read'])]
     #[Assert\NotBlank]
     #[Assert\Length(min:3)]
     private ?string $fullName = null;
