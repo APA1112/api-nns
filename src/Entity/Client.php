@@ -8,6 +8,7 @@ use Doctrine\Common\Collections\Collection;
 use Doctrine\DBAL\Types\Types;
 use Doctrine\ORM\Mapping as ORM;
 use Symfony\Component\Serializer\Attribute\Groups;
+use Symfony\Component\Validator\Constraints as Assert;
 
 #[ORM\Entity(repositoryClass: ClientRepository::class)]
 class Client
@@ -20,22 +21,32 @@ class Client
 
     #[ORM\Column(length: 255)]
     #[Groups(['client:read'])]
+    #[Assert\NotBlank]
+    #[Assert\Length(min:9)]
+    #[Assert\Regex(pattern: '/^[0-9]{8}[TRWAGMYFPDXBNJZSQVHLCKE]$/i')]
     private ?string $dni = null;
 
     #[ORM\Column(length: 255)]
     #[Groups(['client:read'])]
+    #[Assert\NotBlank]
+    #[Assert\Length(min:3)]
     private ?string $fullName = null;
 
     #[ORM\Column(type: Types::TEXT)]
     #[Groups(['client:read'])]
+    #[Assert\NotBlank]
     private ?string $address = null;
 
     #[ORM\Column(length: 255)]
     #[Groups(['client:read'])]
+    #[Assert\NotBlank]
+    #[Assert\Length(min:9)]
+    #[Assert\Regex(pattern: '/^\+?[0-9\s\-]+$/')]
     private ?string $phone = null;
 
     #[ORM\Column]
     #[Groups(['client:read'])]
+    #[Assert\NotNull]
     private ?\DateTimeImmutable $createdAt = null;
 
     /**
@@ -43,6 +54,7 @@ class Client
      */
     #[ORM\OneToMany(targetEntity: Service::class, mappedBy: 'client')]
     #[Groups(['client:read'])]
+    #[Assert\Valid]
     private Collection $services;
 
     public function __construct()
