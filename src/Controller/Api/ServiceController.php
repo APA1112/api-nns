@@ -70,7 +70,7 @@ final class ServiceController extends AbstractController
 
     // Endpoint PATCH/PUT para actualizar un servicio existente
     #[Route('/api/services/{id}', name: 'api_service_update', methods: ['PUT', 'PATCH'])]
-    public function update(int $id, Request $request, EntityManagerInterface $entityManager, DenormalizerInterface $denormalizer) : JsonResponse
+    public function update(int $id, Request $request, EntityManagerInterface $entityManager, DenormalizerInterface $denormalizer): JsonResponse
     {
         $service = $entityManager->getRepository(Service::class)->find($id);
 
@@ -88,11 +88,23 @@ final class ServiceController extends AbstractController
 
         // Actualizar el estado automáticamente si se han proporcionado campos de las entidades hijas
         if (isset($data['ontMac']) || isset($data['antennaMac'])) {
-        $service->setStatus('Activo');
-    }
+            $service->setStatus('Activo');
+        }
 
         $entityManager->flush();
 
         return $this->json($service, 200, [], ['groups' => 'service:read']);
+    }
+
+    //Endpoint DELETE para eliminar un servicio por su ID
+    #[Route('/api/services/{id}', name: 'api_service_delete', methods: ['DELETE'])]
+    public function delete(Service $service, EntityManagerInterface $entityManager): JsonResponse
+    {
+        if (!$service) {
+            return $this->json(['error' => 'Servicio no encontrado'], 404);
+        }
+        $service->setStatus('Baja');
+        $entityManager->flush();
+        return $this->json(['message' => 'Servicio dado de baja correctamente']);
     }
 }
