@@ -52,7 +52,7 @@ class Client
     /**
      * @var Collection<int, Service>
      */
-    #[ORM\OneToMany(targetEntity: Service::class, mappedBy: 'client')]
+    #[ORM\OneToMany(targetEntity: Service::class, mappedBy: 'client', orphanRemoval: true, cascade: ['persist', 'remove'])]
     #[Groups(['client:read'])]
     #[Assert\Valid]
     private Collection $services;
