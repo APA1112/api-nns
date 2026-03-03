@@ -51,7 +51,7 @@ class Ticket
     /**
      * @var Collection<int, TicketComment>
      */
-    #[ORM\OneToMany(targetEntity: TicketComment::class, mappedBy: 'ticket', orphanRemoval: true)]
+    #[ORM\OneToMany(targetEntity: TicketComment::class, mappedBy: 'ticket', orphanRemoval: true, cascade: ['persist'])]
     #[Groups('ticket:read')]
     private Collection $ticketComments;
 

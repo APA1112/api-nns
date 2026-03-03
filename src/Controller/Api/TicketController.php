@@ -5,6 +5,8 @@ namespace App\Controller\Api;
 use App\Entity\Ticket;
 use App\Entity\TicketComment;
 use App\Entity\Service;
+use App\Entity\User;
+use App\Entity\Role;
 use Symfony\Bundle\FrameworkBundle\Controller\AbstractController;
 use Symfony\Component\HttpFoundation\JsonResponse;
 use Symfony\Component\Routing\Attribute\Route;
@@ -22,7 +24,7 @@ final class TicketController extends AbstractController
     }
     // CASO BUZÓN (Tickets activos)
     #[Route('/api/mailbox', name: 'tickets_mailbox', methods: ['GET'])]
-    public function mailbox(TicketRepository $ticketRepository): JsonResponse
+    public function listMailbox(TicketRepository $ticketRepository): JsonResponse
     {
         $tickets = $ticketRepository->findForMailbox();
 
@@ -32,7 +34,7 @@ final class TicketController extends AbstractController
     }
     // CASO POR SERVICIO (Todos los tickets de un servicio)
     #[Route('/api/service/{id}', name: 'tickets_by_service', methods: ['GET'])]
-    public function byService(Service $service, TicketRepository $ticketRepository): JsonResponse
+    public function listByService(Service $service, TicketRepository $ticketRepository): JsonResponse
     {
         // Symfony hace el ParamConverter automático con el {id} para obtener el objeto Service
         $tickets = $ticketRepository->findByService($service);
@@ -43,23 +45,47 @@ final class TicketController extends AbstractController
     }
 
     // Crear un nuevo ticket con un comentario inicial
-    #[Route('/api/ticket/new', name:'create_ticket', methods:['POST'])]
+    #[Route('/api/ticket/new', name: 'create_ticket', methods: ['POST'])]
     public function create(Request $request, EntityManagerInterface $em): JsonResponse
     {
         $data = json_decode($request->getContent(), true);
 
         $ticket = new Ticket();
         $ticket->setSubject($data['subject']);
-        $ticket->setPriority($data['priority']);
-        $ticket->setStatus('abierto'); // Estado inicial por defecto
+        $ticket->setPriority(strtoupper($data['priority']));
+        $ticket->setStatus('ABIERTO');
         $ticket->setCreatedAt(new \DateTimeImmutable());
 
-        // Asignamos el servicio (puedes usar un Repository para buscarlo por ID)
+        // Asignar Servicio
         $service = $em->getRepository(Service::class)->find($data['service_id']);
         $ticket->setService($service);
 
-        // El creador suele ser el usuario autenticado
-        $ticket->setCreator($this->getUser());
+        // Asignar Creador (Manualmente por ahora)
+        $user = $em->getRepository(User::class)->find($data['creator_id']);
+        $ticket->setCreator($user);
+
+        // Asignar Rol
+        if (!isset($data['assigned_role_id'])) {
+            return $this->json(['error' => 'Debes asignar un rol al ticket'], 400);
+        }
+
+        $role = $em->getRepository(Role::class)->find($data['assigned_role_id']);
+
+        if (!$role) {
+            return $this->json(['error' => 'El rol especificado no existe'], 404);
+        }
+
+        $ticket->setAssignedRole($role);
+
+        // Crear el TicketComment inicial
+        // Usamos el 'subject' o una descripción si la envías en el JSON
+        $initialComment = new TicketComment();
+        $initialComment->setComment("Comentario inicial: " . ($data['description'] ?? $data['subject']));
+        $initialComment->setCreatedAt(new \DateTimeImmutable());
+        $initialComment->setCreatorUser($user); // El creador del ticket es el autor del primer comentario
+
+        // Vincular comentario con ticket
+        $ticket->addTicketComment($initialComment);
 
         $em->persist($ticket);
         $em->flush();
@@ -68,22 +94,29 @@ final class TicketController extends AbstractController
     }
 
     // Editamos un ticket ya existente
-    #[Route('/api/ticket//{id}', name: 'edit', methods: ['PATCH', 'PUT'])]
-    public function edit(Ticket $ticket, Request $request, EntityManagerInterface $em): JsonResponse
+    #[Route('/api/ticket/{id}', name: 'ticket_edit', methods: ['PATCH', 'PUT'])]
+    public function update(Ticket $ticket, Request $request, EntityManagerInterface $em): JsonResponse
     {
         $data = json_decode($request->getContent(), true);
 
-        // 1. Cambiar estado si viene en la petición
+        // Cambiar estado si viene en la petición
         if (isset($data['status'])) {
             $ticket->setStatus($data['status']);
         }
 
-        // 2. Añadir comentario si viene en la petición
+        // Añadir comentario si viene en la petición
         if (isset($data['comment'])) {
+            // Buscamos al usuario manualmente del JSON porque no hay sesión activa
+            $userId = $data['creator_id'] ?? null;
+            $user = $userId ? $em->getRepository(User::class)->find($userId) : null;
+
+            if (!$user) {
+                return $this->json(['error' => 'Se requiere un ID de usuario válido (creator_id) para comentar'], 400);
+            }
             $comment = new TicketComment();
             $comment->setComment($data['comment']);
             $comment->setCreatedAt(new \DateTimeImmutable());
-            $comment->setCreatorUser($this->getUser());
+            $comment->setCreatorUser($user);
 
             $ticket->addTicketComment($comment);
             $em->persist($comment);
