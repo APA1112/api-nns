@@ -3,6 +3,7 @@
 namespace App\Repository;
 
 use App\Entity\Ticket;
+use App\Entity\Service;
 use Doctrine\Bundle\DoctrineBundle\Repository\ServiceEntityRepository;
 use Doctrine\Persistence\ManagerRegistry;
 
@@ -15,29 +16,26 @@ class TicketRepository extends ServiceEntityRepository
     {
         parent::__construct($registry, Ticket::class);
     }
+    public function findForMailbox(): array
+    {
+        return $this->createQueryBuilder('t')
+            ->leftJoin('t.ticketComments', 'c')->addSelect('c') // Carga comentarios
+            ->leftJoin('t.service', 's')->addSelect('s')      // Carga el servicio
+            ->where('t.status IN (:statuses)')
+            ->setParameter('statuses', ['ABIERTO', 'EN CURSO', 'BLOQUEADO'])
+            ->orderBy('t.createdAt', 'DESC')
+            ->getQuery()
+            ->getResult();
+    }
 
-//    /**
-//     * @return Ticket[] Returns an array of Ticket objects
-//     */
-//    public function findByExampleField($value): array
-//    {
-//        return $this->createQueryBuilder('t')
-//            ->andWhere('t.exampleField = :val')
-//            ->setParameter('val', $value)
-//            ->orderBy('t.id', 'ASC')
-//            ->setMaxResults(10)
-//            ->getQuery()
-//            ->getResult()
-//        ;
-//    }
-
-//    public function findOneBySomeField($value): ?Ticket
-//    {
-//        return $this->createQueryBuilder('t')
-//            ->andWhere('t.exampleField = :val')
-//            ->setParameter('val', $value)
-//            ->getQuery()
-//            ->getOneOrNullResult()
-//        ;
-//    }
+    public function findByService(Service $service): array
+    {
+        return $this->createQueryBuilder('t')
+            ->leftJoin('t.ticketComments', 'c')->addSelect('c')
+            ->where('t.service = :service')
+            ->setParameter('service', $service)
+            ->orderBy('t.createdAt', 'DESC')
+            ->getQuery()
+            ->getResult();
+    }
 }

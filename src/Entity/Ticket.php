@@ -7,6 +7,7 @@ use Doctrine\Common\Collections\ArrayCollection;
 use Doctrine\Common\Collections\Collection;
 use Doctrine\DBAL\Types\Types;
 use Doctrine\ORM\Mapping as ORM;
+use Symfony\Component\Serializer\Attribute\Groups;
 
 #[ORM\Entity(repositoryClass: TicketRepository::class)]
 class Ticket
@@ -14,35 +15,44 @@ class Ticket
     #[ORM\Id]
     #[ORM\GeneratedValue]
     #[ORM\Column]
+    #[Groups('ticket:read')]
     private ?int $id = null;
 
     #[ORM\ManyToOne(inversedBy: 'tickets')]
+    #[Groups('ticket:read')]
     private ?Service $service = null;
 
     #[ORM\ManyToOne]
     #[ORM\JoinColumn(nullable: false)]
+    #[Groups('ticket:read')]
     private ?User $creator = null;
 
     #[ORM\ManyToOne]
     #[ORM\JoinColumn(nullable: false)]
+    #[Groups('ticket:read')]
     private ?Role $assignedRole = null;
 
     #[ORM\Column(length: 255)]
+    #[Groups('ticket:read')]
     private ?string $priority = null;
 
     #[ORM\Column(length: 255)]
+    #[Groups('ticket:read')]
     private ?string $status = null;
 
     #[ORM\Column(type: Types::TEXT)]
+    #[Groups('ticket:read')]
     private ?string $subject = null;
 
     #[ORM\Column]
+    #[Groups('ticket:read')]
     private ?\DateTimeImmutable $createdAt = null;
 
     /**
      * @var Collection<int, TicketComment>
      */
     #[ORM\OneToMany(targetEntity: TicketComment::class, mappedBy: 'ticket', orphanRemoval: true)]
+    #[Groups('ticket:read')]
     private Collection $ticketComments;
 
     public function __construct()

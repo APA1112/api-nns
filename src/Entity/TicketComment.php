@@ -5,6 +5,7 @@ namespace App\Entity;
 use App\Repository\TicketCommentRepository;
 use Doctrine\DBAL\Types\Types;
 use Doctrine\ORM\Mapping as ORM;
+use Symfony\Component\Serializer\Attribute\Groups;
 
 #[ORM\Entity(repositoryClass: TicketCommentRepository::class)]
 class TicketComment
@@ -12,6 +13,7 @@ class TicketComment
     #[ORM\Id]
     #[ORM\GeneratedValue]
     #[ORM\Column]
+    #[Groups('ticket:read')]
     private ?int $id = null;
 
     #[ORM\ManyToOne(inversedBy: 'ticketComments')]
@@ -20,12 +22,15 @@ class TicketComment
 
     #[ORM\ManyToOne]
     #[ORM\JoinColumn(nullable: false)]
+    #[Groups('ticket:read')]
     private ?User $CreatorUser = null;
 
     #[ORM\Column(type: Types::TEXT)]
+    #[Groups('ticket:read')]
     private ?string $comment = null;
 
     #[ORM\Column]
+    #[Groups('ticket:read')]
     private ?\DateTimeImmutable $createdAt = null;
 
     public function getId(): ?int

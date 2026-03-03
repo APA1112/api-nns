@@ -6,6 +6,7 @@ use App\Repository\RoleRepository;
 use Doctrine\Common\Collections\ArrayCollection;
 use Doctrine\Common\Collections\Collection; // CORREGIDO: Import de Doctrine, no de Validator
 use Doctrine\ORM\Mapping as ORM;
+use Symfony\Component\Serializer\Attribute\Groups;
 
 #[ORM\Entity(repositoryClass: RoleRepository::class)]
 class Role
@@ -17,6 +18,7 @@ class Role
 
     // Sugerencia: añadir unique: true para evitar duplicados
     #[ORM\Column(length: 255, unique: true)] 
+    #[Groups('ticket:read')]
     private ?string $name = null;
 
     /**
