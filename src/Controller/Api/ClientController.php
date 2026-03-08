@@ -50,13 +50,37 @@ final class ClientController extends AbstractController
     // Endpoint POST para crear un nuevo cliente
     #[Route('/api/clients', name: 'api_clients_create', methods: ["POST"])]
     #[OA\Post(
-        summary: 'Crear un nuevo cliente',
+        summary: 'Registrar un nuevo cliente',
+        description: 'Crea un cliente en el sistema. El DNI debe ser válido (8 números y letra) y el teléfono debe tener formato internacional.',
         requestBody: new OA\RequestBody(
-            content: new OA\JsonContent(ref: new Model(type: Client::class, groups: ['client:read'])) // O un grupo 'write' si lo creas
+            required: true,
+            content: new OA\JsonContent(
+                ref: new Model(type: Client::class, groups: ['client:write']),
+                example: [
+                    "dni" => "12345678Z",
+                    "fullName" => "Juan Pérez García",
+                    "address" => "Calle Mayor 15, Lucena, Córdoba",
+                    "phone" => "+34 600123456",
+                    "createdAt" => "2025-03-07 00:49:44"
+                ]
+            )
         ),
         responses: [
-            new OA\Response(response: 201, description: 'Cliente creado'),
-            new OA\Response(response: 400, description: 'Error de validación')
+            new OA\Response(
+                response: 201,
+                description: 'Cliente creado exitosamente',
+                content: new OA\JsonContent(ref: new Model(type: Client::class, groups: ['client:read']))
+            ),
+            new OA\Response(
+                response: 400,
+                description: 'Error de validación en los datos enviados',
+                content: new OA\JsonContent(
+                    example: [
+                        "dni" => ["Este valor no es un DNI válido."],
+                        "fullName" => ["Este valor es demasiado corto. Debe tener 3 caracteres o más."]
+                    ]
+                )
+            )
         ]
     )]
     public function create(Request $request, SerializerInterface $serializer, EntityManagerInterface $entityManager, ValidatorInterface $validator): JsonResponse
@@ -78,6 +102,42 @@ final class ClientController extends AbstractController
 
     // Endpoint UPDATE para actualizar un cliente por su ID
     #[Route('/api/clients/{id}', name: 'api_clients_update', methods: ["PUT", "PATCH"])]
+    #[OA\Put(
+        summary: 'Actualizar un cliente existente',
+        description: 'Actualiza los datos de un cliente. Puedes enviar todos los campos (PUT) o solo algunos (PATCH).',
+        requestBody: new OA\RequestBody(
+            required: true,
+            content: new OA\JsonContent(
+                ref: new Model(type: Client::class, groups: ['client:write']),
+                example: [
+                    "fullName" => "Juan Pérez Modificado",
+                    "address" => "Nueva Dirección, Lucena",
+                    "phone" => "+34 666777888"
+                ]
+            )
+        ),
+        responses: [
+            new OA\Response(
+                response: 200,
+                description: 'Cliente actualizado con éxito',
+                content: new OA\JsonContent(ref: new Model(type: Client::class, groups: ['client:read']))
+            ),
+            new OA\Response(
+                response: 400,
+                description: 'Datos inválidos'
+            ),
+            new OA\Response(
+                response: 404,
+                description: 'Cliente no encontrado'
+            )
+        ]
+    )]
+    #[OA\Parameter(
+        name: 'id',
+        in: 'path',
+        description: 'ID del cliente a actualizar',
+        schema: new OA\Schema(type: 'integer')
+    )]
     public function update(Client $client, Request $request, SerializerInterface $serializer, EntityManagerInterface $entityManager, ValidatorInterface $validator): JsonResponse
     {
         $serializer->deserialize($request->getContent(), Client::class, 'json', ['object_to_populate' => $client]);

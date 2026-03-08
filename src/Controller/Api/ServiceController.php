@@ -30,22 +30,43 @@ final class ServiceController extends AbstractController
     // Endpoint POST para crear un nuevo servicio para un cliente específico
     #[Route('/api/clients/{id}/services', name: 'api_service_create', methods: ['POST'])]
     #[OA\Post(
-        summary: 'Crear servicio para un cliente',
-        description: 'El campo "type" debe ser "wimax" o "ftth"',
+        summary: 'Crear un nuevo servicio para un cliente',
+        description: 'Crea un servicio asociado a un cliente existente. El estado inicial será "Pendiente de Instalación".',
         requestBody: new OA\RequestBody(
+            required: true,
             content: new OA\JsonContent(
-                properties: [
-                    new OA\Property(property: 'type', type: 'string', example: 'wimax'),
-                    new OA\Property(property: 'installAddress', type: 'string'),
-                    new OA\Property(property: 'antennaMac', type: 'string', description: 'Solo para wimax'),
-                    new OA\Property(property: 'ontMac', type: 'string', description: 'Solo para ftth')
+                oneOf: [
+                    new OA\Schema(ref: new Model(type: ServiceWimax::class, groups: ['service:write'])),
+                    new OA\Schema(ref: new Model(type: ServiceFtth::class, groups: ['service:write']))
+                ],
+                example: [
+                    "type" => "wimax",
+                    "installAddress" => "Calle Falsa 123, Lucena",
+                    "antennaMac" => "00:1B:44:11:3A:B7"
                 ]
             )
         ),
         responses: [
-            new OA\Response(response: 201, description: 'Servicio creado'),
-            new OA\Response(response: 404, description: 'Cliente no encontrado')
+            new OA\Response(
+                response: 201,
+                description: 'Servicio creado con éxito',
+                content: new OA\JsonContent(ref: new Model(type: Service::class, groups: ['service:read']))
+            ),
+            new OA\Response(
+                response: 400,
+                description: 'Tipo de servicio inválido o datos mal formados'
+            ),
+            new OA\Response(
+                response: 404,
+                description: 'El cliente especificado no existe'
+            )
         ]
+    )]
+    #[OA\Parameter(
+        name: 'id',
+        in: 'path',
+        description: 'ID del cliente al que se le asignará el servicio',
+        schema: new OA\Schema(type: 'integer')
     )]
     public function create(
         int $id,

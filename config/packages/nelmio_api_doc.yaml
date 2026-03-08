@@ -2,7 +2,12 @@ nelmio_api_doc:
     documentation:
         info:
             title: NNS API
-            description: API to manage the database of clients and their tickets about internet incidents
+            description: >
+                Esta API permite gestionar clientes, sus servicios de internet y el sistema de tickets de soporte.
+                **Flujo de trabajo:**
+                1. Crear un Cliente.
+                2. Asignar un Servicio (Wimax o FTTH) al cliente.
+                3. Abrir Tickets sobre esos servicios si hay incidencias.
             version: 1.0.0
         components:
             securitySchemas:
