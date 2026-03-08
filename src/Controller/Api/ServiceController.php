@@ -13,7 +13,10 @@ use App\Entity\ServiceFtth;
 use App\Entity\Client;
 use Symfony\Component\Serializer\Normalizer\DenormalizerInterface;
 use Symfony\Component\Serializer\Normalizer\AbstractNormalizer;
+use OpenApi\Attributes as OA;
+use Nelmio\ApiDocBundle\Attribute\Model;
 
+#[OA\Tag(name: "Services")]
 final class ServiceController extends AbstractController
 {
     // Endpoint GET para obtener todos los servicios
@@ -26,6 +29,24 @@ final class ServiceController extends AbstractController
 
     // Endpoint POST para crear un nuevo servicio para un cliente específico
     #[Route('/api/clients/{id}/services', name: 'api_service_create', methods: ['POST'])]
+    #[OA\Post(
+        summary: 'Crear servicio para un cliente',
+        description: 'El campo "type" debe ser "wimax" o "ftth"',
+        requestBody: new OA\RequestBody(
+            content: new OA\JsonContent(
+                properties: [
+                    new OA\Property(property: 'type', type: 'string', example: 'wimax'),
+                    new OA\Property(property: 'installAddress', type: 'string'),
+                    new OA\Property(property: 'antennaMac', type: 'string', description: 'Solo para wimax'),
+                    new OA\Property(property: 'ontMac', type: 'string', description: 'Solo para ftth')
+                ]
+            )
+        ),
+        responses: [
+            new OA\Response(response: 201, description: 'Servicio creado'),
+            new OA\Response(response: 404, description: 'Cliente no encontrado')
+        ]
+    )]
     public function create(
         int $id,
         Request $request,

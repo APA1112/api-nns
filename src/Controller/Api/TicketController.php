@@ -13,17 +13,49 @@ use Symfony\Component\Routing\Attribute\Route;
 use Doctrine\ORM\EntityManagerInterface;
 use App\Repository\TicketRepository;
 use Symfony\Component\HttpFoundation\Request;
+use OpenApi\Attributes as OA;
+use Nelmio\ApiDocBundle\Attribute\Model;
 
+#[OA\Tag(name: "Tickets")]
 final class TicketController extends AbstractController
 {
     #[Route('/api/tickets', name: 'api_tickets_index', methods: ["GET"])]
+    #[OA\Post(
+        summary: 'Crear ticket con comentario inicial',
+        requestBody: new OA\RequestBody(
+            content: new OA\JsonContent(
+                required: ['subject', 'priority', 'service_id', 'creator_id', 'assigned_role_id'],
+                properties: [
+                    new OA\Property(property: 'subject', type: 'string'),
+                    new OA\Property(property: 'priority', type: 'string', example: 'ALTA'),
+                    new OA\Property(property: 'service_id', type: 'integer'),
+                    new OA\Property(property: 'creator_id', type: 'integer'),
+                    new OA\Property(property: 'assigned_role_id', type: 'integer'),
+                    new OA\Property(property: 'description', type: 'string')
+                ]
+            )
+        ),
+        responses: [
+            new OA\Response(response: 201, description: 'Ticket generado')
+        ]
+    )]
     public function index(EntityManagerInterface $entityManager): JsonResponse
     {
         $tickets = $entityManager->getRepository(Ticket::class)->findAll();
         return $this->json($tickets, 200, [], ['groups' => 'ticket:read']);
     }
     // CASO BUZÓN (Tickets activos)
-    #[Route('/api/mailbox', name: 'tickets_mailbox', methods: ['GET'])]
+    #[Route('/api/tickets/mailbox', name: 'tickets_mailbox', methods: ['GET'])]
+    #[OA\Get(
+        summary: 'Buzón de tickets activos',
+        responses: [
+            new OA\Response(
+                response: 200, 
+                description: 'Tickets filtrados por estado activo',
+                content: new OA\JsonContent(type: 'array', items: new OA\Items(ref: new Model(type: Ticket::class, groups: ['ticket:read'])))
+            )
+        ]
+    )]
     public function listMailbox(TicketRepository $ticketRepository): JsonResponse
     {
         $tickets = $ticketRepository->findForMailbox();
@@ -33,7 +65,7 @@ final class TicketController extends AbstractController
         ]);
     }
     // CASO POR SERVICIO (Todos los tickets de un servicio)
-    #[Route('/api/service/{id}', name: 'tickets_by_service', methods: ['GET'])]
+    #[Route('/api/services/{id}/tickets', name: 'tickets_by_service', methods: ['GET'])]
     public function listByService(Service $service, TicketRepository $ticketRepository): JsonResponse
     {
         // Symfony hace el ParamConverter automático con el {id} para obtener el objeto Service
@@ -45,7 +77,7 @@ final class TicketController extends AbstractController
     }
 
     // Crear un nuevo ticket con un comentario inicial
-    #[Route('/api/ticket/new', name: 'create_ticket', methods: ['POST'])]
+    #[Route('/api/tickets', name: 'create_ticket', methods: ['POST'])]
     public function create(Request $request, EntityManagerInterface $em): JsonResponse
     {
         $data = json_decode($request->getContent(), true);
