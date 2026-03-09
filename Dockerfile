@@ -41,6 +41,8 @@ RUN set -eux; \
 
 # Ejecutar scripts de post-instalación (cache warmup e importmap)
 RUN set -eux; \
+    export APP_RUNTIME_ENV=prod; \
+    export DATABASE_URL="mysql://null:null@127.0.0.1:3306/null?serverVersion=8.0"; \
     composer dump-autoload --classmap-authoritative --no-dev; \
     composer run-script --no-dev post-install-cmd; \
     chmod +x bin/console
