@@ -37,4 +37,4 @@ chmod +x /usr/local/bin/docker-entrypoint.sh
 EXPOSE 80
 EXPOSE 443
 
-CMD ["frankenphp", "run", "--config", "/etc/caddy/Caddyfile", "--http-port", "80"]
+CMD ["frankenphp", "php-server", "--listen", ":80"]
