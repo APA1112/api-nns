@@ -40,11 +40,16 @@ RUN set -eux; \
     setfacl -dR -m u:www-data:rwX var
 
 # Ejecutar scripts de post-instalación (cache warmup e importmap)
+# Usamos APP_RUNTIME_ENV y desactivamos el calentamiento de caché 
+# que requiere DB para que el build no falle.
 RUN set -eux; \
     export APP_ENV=prod; \
-    export DATABASE_URL="postgresql://root:p1C7rCReptfQwLPfNlgi@62.171.155.193:5432/nns?serverVersion=16&charset=utf8"; \
+    export DATABASE_URL="postgresql://null:null@127.0.0.1:5432/null"; \
+    # Instalamos sin ejecutar los scripts de composer.json para evitar el error
     composer dump-autoload --classmap-authoritative --no-dev; \
-    composer run-script --no-dev post-install-cmd; \
+    # Calentamos la caché manualmente saltándonos la base de datos
+    php bin/console cache:clear --no-warmup; \
+    php bin/console cache:warmup; \
     chmod +x bin/console
 
 # Exponer el puerto que usará Traefik (Dokploy)
