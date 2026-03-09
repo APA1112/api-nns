@@ -39,6 +39,26 @@ RUN set -eux; \
     setfacl -R -m u:www-data:rwX var; \
     setfacl -dR -m u:www-data:rwX var
 
+# Limpiamos las carpetas de caché por si acaso
+RUN rm -rf var/cache/* var/log/*
+
+# FASE DE COMPILACIÓN: 
+# Solo generamos el autoloader. NO ejecutamos bin/console aquí.
+RUN set -eux; \
+    composer dump-autoload --classmap-authoritative --no-dev; \
+    chmod +x bin/console
+
+# Creamos un pequeño script de entrada para ejecutar la caché al arrancar
+RUN echo '#!/bin/sh' > /usr/local/bin/docker-entrypoint.sh && \
+    echo 'php bin/console cache:clear --env=prod' >> /usr/local/bin/docker-entrypoint.sh && \
+    echo 'exec frankenphp run --config /etc/caddy/Caddyfile' >> /usr/local/bin/docker-entrypoint.sh && \
+    chmod +x /usr/local/bin/docker-entrypoint.sh
+
+EXPOSE 80
+EXPOSE 443
+
+ENTRYPOINT ["/usr/local/bin/docker-entrypoint.sh"]
+
 # Ejecutar scripts de post-instalación (cache warmup e importmap)
 # Usamos APP_RUNTIME_ENV y desactivamos el calentamiento de caché 
 # que requiere DB para que el build no falle.
