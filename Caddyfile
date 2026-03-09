@@ -1,0 +1,14 @@
+# Caddyfile
+{
+    # Desactiva el SSL automático para que no choque con Cloudflare/Traefik
+    auto_https off
+}
+
+:80 {
+    # Indica que el servidor solo escucha en el 80
+    log {
+        level DEBUG
+    }
+    
+    php_server
+}
