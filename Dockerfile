@@ -15,7 +15,7 @@ RUN apk add --no-cache \
     intl \
     zip \
     opcache \
-    pdo_mysql \
+    pdo_pgsql \
     bcmath
 
 # Instalar Composer
