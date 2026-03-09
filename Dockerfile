@@ -44,3 +44,5 @@ chmod +x /usr/local/bin/docker-entrypoint.sh
 EXPOSE 80
 
 ENTRYPOINT ["/usr/local/bin/docker-entrypoint.sh"]
+
+CMD ["frankenphp", "run", "--config", "/etc/caddy/Caddyfile"]
