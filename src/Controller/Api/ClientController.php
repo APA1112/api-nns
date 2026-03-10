@@ -42,6 +42,19 @@ final class ClientController extends AbstractController
 
     // Endpoint GET para obtener un cliente por su ID
     #[Route('/api/clients/{id}', name: 'api_clients_detail', methods: ["GET"])]
+        #[OA\Get(
+        summary: 'Obtener cliente filtrando por id',
+        responses: [
+            new OA\Response(
+                response: 200,
+                description: 'Cliente retornado con éxito',
+                content: new OA\JsonContent(
+                    type: 'array',
+                    items: new OA\Items(ref: new Model(type: Client::class, groups: ['client:read']))
+                )
+            )
+        ]
+    )]
     public function detail(Client $client): JsonResponse
     {
         return $this->json($client, 200, [], ['groups' => 'client:read', 'ignored_attributes' => ['id']]);

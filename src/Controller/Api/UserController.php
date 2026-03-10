@@ -33,7 +33,6 @@ final class UserController extends AbstractController
     }
 
     #[Route('/api/users', methods: ['POST'])]
-    // #[IsGranted('ROLE_ADMIN')] // Solo admins pueden crear
     public function create(
         Request $request, 
         EntityManagerInterface $em, 
@@ -41,20 +40,34 @@ final class UserController extends AbstractController
     ): JsonResponse {
         $data = json_decode($request->getContent(), true);
 
+        // 1. Validación básica de datos de entrada
+        if (!isset($data['email'], $data['password'], $data['role_id'])) {
+            return $this->json(['error' => 'Faltan datos obligatorios'], Response::HTTP_BAD_REQUEST);
+        }
+
+        // 2. Buscar la entidad Role por su ID
+        $roleRepo = $em->getRepository(Role::class);
+        $roleEntity = $roleRepo->find($data['role_id']);
+
+        if (!$roleEntity) {
+            return $this->json(['error' => 'El rol especificado no existe'], Response::HTTP_NOT_FOUND);
+        }
+
+        // 3. Crear el usuario
         $user = new User();
         $user->setEmail($data['email']);
         
-        // Hashear el password antes de guardar
+        // Hashear password
         $hashedPassword = $hasher->hashPassword($user, $data['password']);
         $user->setPassword($hashedPassword);
 
-        // Aquí deberías buscar la entidad Role y asignarla
-        // $user->setUserRole($roleEntity);
+        // 4. Asignar la relación
+        $user->setUserRole($roleEntity);
 
         $em->persist($user);
         $em->flush();
 
-        return $this->json(['message' => 'Usuario creado'], Response::HTTP_CREATED);
+        return $this->json(['message' => 'Usuario creado con éxito'], Response::HTTP_CREATED);
     }
 
     #[Route('/api/users/{id}', methods: ['PUT'])]
@@ -64,7 +77,7 @@ final class UserController extends AbstractController
         EntityManagerInterface $em, 
         UserPasswordHasherInterface $hasher
     ): JsonResponse {
-        $this->denyAccessUnlessGranted('ROLE_ADMIN'); // O validar si es el mismo usuario
+        $this->denyAccessUnlessGranted('ROLE_ADMIN');
         
         $data = json_decode($request->getContent(), true);
 
@@ -77,7 +90,7 @@ final class UserController extends AbstractController
         return $this->json(['message' => 'Usuario actualizado']);
     }
 
-    #[Route('/{id}', methods: ['DELETE'])]
+    #[Route('/api/{id}', methods: ['DELETE'])]
     //#[IsGranted('ROLE_ADMIN')]
     public function delete(User $user, EntityManagerInterface $em): JsonResponse
     {
