@@ -16,9 +16,9 @@ class Role
     #[ORM\Column]
     private ?int $id = null;
 
-    // Sugerencia: añadir unique: true para evitar duplicados
+    // Añadir unique: true para evitar duplicados
     #[ORM\Column(length: 255, unique: true)] 
-    #[Groups('ticket:read')]
+    #[Groups('ticket:read', 'user:read')]
     private ?string $name = null;
 
     /**

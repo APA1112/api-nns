@@ -17,10 +17,11 @@ class User implements UserInterface, PasswordAuthenticatedUserInterface
     #[ORM\Id]
     #[ORM\GeneratedValue]
     #[ORM\Column]
-    #[Groups('ticket:read')]
+    #[Groups('ticket:read', 'user:read')]
     private ?int $id = null;
 
     #[ORM\Column(length: 180)]
+    #[Groups('user:read')]
     private ?string $email = null;
 
     #[ORM\ManyToOne(targetEntity: Role::class, inversedBy: 'users')]
@@ -73,6 +74,10 @@ class User implements UserInterface, PasswordAuthenticatedUserInterface
         $roles[] = 'ROLE_USER';
 
         return array_unique($roles);
+    }
+    #[Groups('user:read')]
+    public function getRoleName(): ?string{
+        return $this->userRole ? $this->userRole->getName() : null;
     }
     
     public function getUserRole(): ?Role

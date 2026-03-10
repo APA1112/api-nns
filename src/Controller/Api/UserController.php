@@ -19,10 +19,17 @@ use Symfony\Component\HttpFoundation\Response;
 #[OA\Tag(name: "Users")]
 final class UserController extends AbstractController
 {
-    #[Route('/api/users', name:('api_users_index'), methods: ['GET'])]
+    #[Route('/api/users', name: 'api_users_index', methods: ['GET'])]
     public function index(UserRepository $repository): JsonResponse
     {   
-        return $this->json($repository->findAll(), context: ['groups' => 'ticket:read']);
+        // Buscamos todos los usuarios
+        $users = $repository->findAll();
+
+        // El contexto 'groups' filtra qué campos salen en el JSON
+        return $this->json($users, Response::HTTP_OK, [], [
+            'groups' => 'user:read',
+            'enable_max_depth' => true
+        ]);
     }
 
     #[Route('/api/users', methods: ['POST'])]
