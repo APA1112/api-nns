@@ -10,6 +10,7 @@ use Symfony\Component\Routing\Attribute\Route;
 use Doctrine\ORM\EntityManagerInterface;
 use Symfony\Component\HttpFoundation\Request;
 use OpenApi\Attributes as OA;
+use App\Repository\UserRepository;
 use Nelmio\ApiDocBundle\Attribute\Model;
 use Symfony\Component\Security\Http\Attribute\IsGranted;
 use Symfony\Component\PasswordHasher\Hasher\UserPasswordHasherInterface;
@@ -19,7 +20,7 @@ use Symfony\Component\HttpFoundation\Response;
 final class UserController extends AbstractController
 {
     #[Route('/api/users', name:('api_users_index'), methods: ['GET'])]
-    public function index(\App\Repository\UserRepository $repository): JsonResponse
+    public function index(UserRepository $repository): JsonResponse
     {   
         return $this->json($repository->findAll(), context: ['groups' => 'ticket:read']);
     }
