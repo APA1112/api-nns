@@ -15,10 +15,16 @@ use Symfony\Component\Security\Http\Attribute\IsGranted;
 use Symfony\Component\PasswordHasher\Hasher\UserPasswordHasherInterface;
 use Symfony\Component\HttpFoundation\Response;
 
-#[Route('/api/users')]
+#[OA\Tag(name: "Users")]
 final class UserController extends AbstractController
 {
-    #[Route('', methods: ['POST'])]
+    #[Route('/api/users', name:('api_users_index'), methods: ['GET'])]
+    public function index(\App\Repository\UserRepository $repository): JsonResponse
+    {   
+        return $this->json($repository->findAll(), context: ['groups' => 'ticket:read']);
+    }
+
+    #[Route('/api/users', methods: ['POST'])]
     // #[IsGranted('ROLE_ADMIN')] // Solo admins pueden crear
     public function create(
         Request $request, 
@@ -43,7 +49,7 @@ final class UserController extends AbstractController
         return $this->json(['message' => 'Usuario creado'], Response::HTTP_CREATED);
     }
 
-    #[Route('/{id}', methods: ['PUT'])]
+    #[Route('/api/users/{id}', methods: ['PUT'])]
     public function update(
         User $user, 
         Request $request, 
