@@ -20,6 +20,11 @@ use Symfony\Component\HttpFoundation\Response;
 final class UserController extends AbstractController
 {
     #[Route('/api/users', name: 'api_users_index', methods: ['GET'])]
+    #[OA\Get(
+    path: '/api/users',
+    security: [['Bearer' => []]] 
+    )]
+    #[OA\Response(response: 200, description: 'Lista de usuarios')]
     public function index(UserRepository $repository): JsonResponse
     {   
         // Buscamos todos los usuarios
@@ -33,6 +38,10 @@ final class UserController extends AbstractController
     }
 
     #[Route('/api/users', methods: ['POST'])]
+     #[OA\Post(
+    path: '/api/users',
+    security: [['Bearer' => []]] 
+    )]
     public function create(
         Request $request, 
         EntityManagerInterface $em, 
@@ -71,6 +80,10 @@ final class UserController extends AbstractController
     }
 
     #[Route('/api/users/{id}', methods: ['PUT'])]
+     #[OA\Put(
+    path: '/api/users',
+    security: [['Bearer' => []]] 
+    )]
     public function update(
         User $user, 
         Request $request, 
@@ -91,6 +104,10 @@ final class UserController extends AbstractController
     }
 
     #[Route('/api/{id}', methods: ['DELETE'])]
+     #[OA\Delete(
+    path: '/api/users',
+    security: [['Bearer' => []]] 
+    )]
     //#[IsGranted('ROLE_ADMIN')]
     public function delete(User $user, EntityManagerInterface $em): JsonResponse
     {

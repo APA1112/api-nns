@@ -10,7 +10,7 @@ nelmio_api_doc:
                 3. Abrir Tickets sobre esos servicios si hay incidencias.
             version: 1.0.0
         components:
-            securitySchemas:
+            securitySchemes:
                 Bearer:
                     type: http
                     scheme: bearer
