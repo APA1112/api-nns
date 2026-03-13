@@ -21,7 +21,7 @@ class User implements UserInterface, PasswordAuthenticatedUserInterface
     private ?int $id = null;
 
     #[ORM\Column(length: 180)]
-    #[Groups('user:read')]
+    #[Groups('ticket:read', 'user:read')]
     private ?string $email = null;
 
     #[ORM\ManyToOne(targetEntity: Role::class, inversedBy: 'users')]

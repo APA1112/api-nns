@@ -27,7 +27,7 @@ class Client
     private ?string $dni = null;
 
     #[ORM\Column(length: 255)]
-    #[Groups(['client:read', 'service:read'])]
+    #[Groups(['client:read', 'service:read', 'ticket:read'])]
     #[Assert\NotBlank]
     #[Assert\Length(min:3)]
     private ?string $fullName = null;

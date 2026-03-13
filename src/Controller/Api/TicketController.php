@@ -42,7 +42,7 @@ final class TicketController extends AbstractController
     public function index(EntityManagerInterface $entityManager): JsonResponse
     {
         $tickets = $entityManager->getRepository(Ticket::class)->findAll();
-        return $this->json($tickets, 200, [], ['groups' => 'ticket:read']);
+        return $this->json($tickets, 200, [], ['groups' => 'ticket:read', 'service:read']);
     }
     // CASO BUZÓN (Tickets activos)
     #[Route('/api/tickets/mailbox', name: 'tickets_mailbox', methods: ['GET'])]
@@ -52,7 +52,7 @@ final class TicketController extends AbstractController
             new OA\Response(
                 response: 200, 
                 description: 'Tickets filtrados por estado activo',
-                content: new OA\JsonContent(type: 'array', items: new OA\Items(ref: new Model(type: Ticket::class, groups: ['ticket:read'])))
+                content: new OA\JsonContent(type: 'array', items: new OA\Items(ref: new Model(type: Ticket::class, groups: ['ticket:read', 'service:read'])))
             )
         ]
     )]

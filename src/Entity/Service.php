@@ -23,7 +23,7 @@ abstract class Service
     private ?int $id = null;
 
     #[ORM\ManyToOne(inversedBy: 'services')]
-    #[Groups(['service:read', 'service:write'])]
+    #[Groups(['service:read', 'service:write', 'ticket:read'])]
     private ?Client $client = null;
 
     #[ORM\Column(length: 255)]
