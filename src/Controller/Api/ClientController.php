@@ -37,7 +37,7 @@ final class ClientController extends AbstractController
     {
         $clients = $entityManager->getRepository(Client::class)->findAll();
 
-        return $this->json($clients, 200, [], ['groups' => 'client:read', 'ignored_attributes' => ['id']]);
+        return $this->json($clients, 200, [], ['groups' => 'client:read']);
     }
 
     // Endpoint GET para obtener un cliente por su ID
