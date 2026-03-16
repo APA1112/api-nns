@@ -40,6 +40,44 @@ final class ClientController extends AbstractController
         return $this->json($clients, 200, [], ['groups' => 'client:read']);
     }
 
+    // Endpoint GET filtrado por nombre o DNI
+    #[Route('/api/clients/search', name: 'api_clients_search', methods: ["GET"])]
+    #[OA\Get(
+        summary: 'Buscar clientes por término (nombre o DNI)',
+        parameters: [
+            new OA\Parameter(name: 'q', in: 'query', description: 'Término de búsqueda', required: true, schema: new OA\Schema(type: 'string'))
+        ],
+        responses: [
+            new OA\Response(
+                response: 200,
+                description: 'Resultados de búsqueda',
+                content: new OA\JsonContent(type: 'array', items: new OA\Items(ref: new Model(type: Client::class, groups: ['client:read'])))
+            )
+        ]
+    )]
+    public function search(Request $request, EntityManagerInterface $entityManager): JsonResponse
+    {
+        $queryTerm = $request->query->get('q', '');
+
+        // Si la búsqueda es muy corta, devolvemos array vacío por seguridad/rendimiento
+        if (strlen($queryTerm) < 3) {
+            return $this->json([], 200);
+        }
+
+        $repository = $entityManager->getRepository(Client::class);
+        
+        // Creamos la consulta personalizada
+        $clients = $repository->createQueryBuilder('c')
+            ->where('c.fullName LIKE :term')
+            ->orWhere('c.dni LIKE :term')
+            ->setParameter('term', '%' . $queryTerm . '%')
+            ->setMaxResults(20) // IMPORTANTE: Limitar resultados para no saturar el frontend
+            ->getQuery()
+            ->getResult();
+
+        return $this->json($clients, 200, [], ['groups' => 'client:read']);
+    }
+
     // Endpoint GET para obtener un cliente por su ID
     #[Route('/api/clients/{id}', name: 'api_clients_detail', methods: ["GET"])]
         #[OA\Get(
