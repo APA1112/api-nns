@@ -112,8 +112,41 @@ final class ServiceController extends AbstractController
 
     // Endpoint PATCH/PUT para actualizar un servicio existente
     #[Route('/api/services/{id}', name: 'api_service_update', methods: ['PUT', 'PATCH'])]
-    public function update(int $id, Request $request, EntityManagerInterface $entityManager, DenormalizerInterface $denormalizer): JsonResponse
-    {
+    #[OA\Put(
+        summary: 'Actualizar un servicio existente',
+        description: 'Actualiza los datos de un servicio. Si se proporcionan los campos técnicos del tipo correspondiente (ontMac para FTTH, antennaMac para WiMAX), el estado pasa a "Activo" automáticamente.',
+        requestBody: new OA\RequestBody(
+            required: true,
+            content: new OA\JsonContent(
+                oneOf: [
+                    new OA\Schema(ref: new Model(type: ServiceWimax::class, groups: ['service:write'])),
+                    new OA\Schema(ref: new Model(type: ServiceFtth::class, groups: ['service:write']))
+                ]
+            )
+        ),
+        responses: [
+            new OA\Response(
+                response: 200,
+                description: 'Servicio actualizado con éxito',
+                content: new OA\JsonContent(ref: new Model(type: Service::class, groups: ['service:read']))
+            ),
+            new OA\Response(response: 400, description: 'Datos inválidos para el tipo de servicio'),
+            new OA\Response(response: 404, description: 'Servicio no encontrado')
+        ]
+    )]
+    #[OA\Parameter(
+        name: 'id',
+        in: 'path',
+        description: 'ID del servicio a actualizar',
+        schema: new OA\Schema(type: 'integer')
+    )]
+    public function update(
+        int $id,
+        Request $request,
+        EntityManagerInterface $entityManager,
+        DenormalizerInterface $denormalizer
+    ): JsonResponse {
+        // 1. Doctrine resuelve automáticamente la subclase correcta gracias a JOINED inheritance
         $service = $entityManager->getRepository(Service::class)->find($id);
 
         if (!$service) {
@@ -122,16 +155,20 @@ final class ServiceController extends AbstractController
 
         $data = json_decode($request->getContent(), true);
 
-        // Denormalizar los datos al objeto de servicio existente
+        // 2. Validar que no se estén enviando campos del tipo incorrecto
+        $validationError = $this->validateFieldsMatchServiceType($service, $data);
+        if ($validationError) {
+            return $this->json(['error' => $validationError], 400);
+        }
+
+        // 3. Denormalizar sobre el objeto existente (get_class devuelve ServiceFtth o ServiceWimax)
         $denormalizer->denormalize($data, get_class($service), null, [
-            'groups' => ['service:write'],
-            AbstractNormalizer::OBJECT_TO_POPULATE => $service
+            'groups'                          => ['service:write'],
+            AbstractNormalizer::OBJECT_TO_POPULATE => $service,
         ]);
 
-        // Actualizar el estado automáticamente si se han proporcionado campos de las entidades hijas
-        if (isset($data['ontMac']) || isset($data['antennaMac'])) {
-            $service->setStatus('Activo');
-        }
+        // 4. Cambiar estado a "Activo" si se han completado los campos técnicos del tipo
+        $this->updateStatusIfComplete($service);
 
         $entityManager->flush();
 
@@ -148,5 +185,54 @@ final class ServiceController extends AbstractController
         $service->setStatus('Baja');
         $entityManager->flush();
         return $this->json(['message' => 'Servicio dado de baja correctamente']);
+    }
+
+    /**
+     * Devuelve un mensaje de error si el payload contiene campos
+     * que no corresponden al tipo real del servicio, o null si todo es correcto.
+     */
+    private function validateFieldsMatchServiceType(Service $service, array $data): ?string
+    {
+        $ftthOnlyFields  = ['ontMac', 'ponPort', 'splitterId', 'opticalPower'];
+        $wimaxOnlyFields = ['antennaMac', 'antennaIp', 'apName', 'signalStrength'];
+
+        if ($service instanceof ServiceFtth) {
+            $forbidden = array_intersect(array_keys($data), $wimaxOnlyFields);
+            if (!empty($forbidden)) {
+                return sprintf(
+                    'El servicio es de tipo FTTH. Campos no permitidos: %s',
+                    implode(', ', $forbidden)
+                );
+            }
+        }
+
+        if ($service instanceof ServiceWimax) {
+            $forbidden = array_intersect(array_keys($data), $ftthOnlyFields);
+            if (!empty($forbidden)) {
+                return sprintf(
+                    'El servicio es de tipo WiMAX. Campos no permitidos: %s',
+                    implode(', ', $forbidden)
+                );
+            }
+        }
+
+        return null;
+    }
+
+    /**
+     * Cambia el estado a "Activo" cuando el campo técnico principal
+     * del tipo correspondiente ya está relleno.
+     */
+    private function updateStatusIfComplete(Service $service): void
+    {
+        if ($service instanceof ServiceFtth && $service->getOntMac() !== null && $service->getStatus() === 'Pendiente de Instalación') {
+            $service->setStatus('Activo');
+            return;
+        }
+
+        if ($service instanceof ServiceWimax && $service->getAntennaMac() !== null && $service->getStatus() === 'Pendiente de Instalación') {
+            $service->setStatus('Activo');
+            return;
+        }
     }
 }
